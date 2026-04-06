@@ -1,0 +1,17 @@
+{
+  "Group": "${group}",
+  "Name": "${name}",
+  "Version": "${version}",
+  "Description": "${description}",
+  "Authors": [{"Name": "Server Admin"}],
+  "ServerVersion": "${server_version}",
+  "IncludesAssetPack": false,
+  "Dependencies": {
+    "com.hccore:HC_Core": "*",
+    "Hytale:EntityModule": "*",
+    "com.hcleveling:HC_Leveling": "*",
+    "com.hcdroplists:HC_DropLists": "*"
+  },
+  "DisabledByDefault": false,
+  "Main": "${entry_point}"
+}

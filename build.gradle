@@ -1,0 +1,117 @@
+plugins {
+    id 'java'
+    id 'com.gradleup.shadow' version '9.3.0'
+}
+
+version = project.version
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(java_version)
+    withSourcesJar()
+}
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    shadowBundle
+    implementation.extendsFrom(shadowBundle)
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+
+    // Path to HytaleServer.jar
+    def localServerJar = file("${rootProject.projectDir}/../../server-files/Server/HytaleServer.jar")
+    def serverJarPath = localServerJar.exists()
+        ? localServerJar.absolutePath
+        : "$hytaleHome/$patchline/package/game/$game_build/Server/HytaleServer.jar"
+    implementation(files(serverJarPath))
+
+    // HC_Leveling API (for position-based level calculation)
+    def hcLevelingJar = file("${rootProject.projectDir}/../HC_Leveling/build/libs/HC_Leveling-${project.version}.jar")
+    if (hcLevelingJar.exists()) {
+        compileOnly(files(hcLevelingJar))
+    }
+
+    // HC_DropLists API (for level-gated drop generation)
+    def hcDropListsJar = file("${rootProject.projectDir}/../HC_DropLists/build/libs/HC_DropLists-${project.version}.jar")
+    if (hcDropListsJar.exists()) {
+        compileOnly(files(hcDropListsJar))
+    }
+
+    // HC_WildernessRegen (optional, for regen callbacks)
+    def hcWildRegenJar = file("${rootProject.projectDir}/../HC_WildernessRegen/build/libs/HC_WildernessRegen-${project.version}.jar")
+    if (hcWildRegenJar.exists()) {
+        compileOnly(files(hcWildRegenJar))
+    }
+
+    // HC_Factions (optional, for claim checks)
+    def hcFactionsJar = file("${rootProject.projectDir}/../HC_Factions/build/libs/HC_Factions-${project.version}.jar")
+    if (hcFactionsJar.exists()) {
+        compileOnly(files(hcFactionsJar))
+    }
+
+    // HC_Core (settings API)
+    compileOnly(files("${rootProject.projectDir}/../HC_Core/build/libs/HC_Core-${project.version}.jar"))
+
+    // Database dependencies (bundled into shadow jar)
+    shadowBundle 'org.postgresql:postgresql:42.7.8'
+    shadowBundle 'com.zaxxer:HikariCP:7.0.2'
+    shadowBundle 'org.slf4j:slf4j-simple:2.0.17'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+shadowJar {
+    archiveClassifier.set('')
+    mergeServiceFiles()
+    configurations = [project.configurations.shadowBundle]
+}
+
+tasks.build {
+    dependsOn("shadowJar")
+}
+
+processResources {
+    var expandProps = [
+        'name'          : project.name,
+        'version'       : project.version,
+        'group'         : project.group,
+        'description'   : mod_description,
+        'server_version': server_version,
+        'entry_point'   : entry_point
+    ]
+
+    filesMatching(['manifest.json']) {
+        expand expandProps
+    }
+    inputs.properties(expandProps)
+}
+
+task deploy(dependsOn: 'build') {
+    doLast {
+        def modsDir = file("${rootProject.projectDir}/../../server-files/mods")
+        def jarFile = file("${buildDir}/libs/${project.name}-${project.version}.jar")
+
+        if (!modsDir.exists()) {
+            modsDir.mkdirs()
+        }
+
+        copy {
+            from jarFile
+            into modsDir
+        }
+
+        def dataDir = file("${rootProject.projectDir}/../../server-files/mods/config/HC_Chests")
+        if (!dataDir.exists()) {
+            dataDir.mkdirs()
+        }
+
+        println "Deployed ${jarFile.name} to ${modsDir}"
+    }
+}

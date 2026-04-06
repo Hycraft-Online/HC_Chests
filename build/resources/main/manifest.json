@@ -1,0 +1,17 @@
+{
+  "Group": "com.hcchests",
+  "Name": "HC_Chests",
+  "Version": "1.0.0",
+  "Description": "Database-driven chest loot system with level-aware wilderness drops and persistent player storage",
+  "Authors": [{"Name": "Server Admin"}],
+  "ServerVersion": "0.0.2",
+  "IncludesAssetPack": false,
+  "Dependencies": {
+    "com.hccore:HC_Core": "*",
+    "Hytale:EntityModule": "*",
+    "com.hcleveling:HC_Leveling": "*",
+    "com.hcdroplists:HC_DropLists": "*"
+  },
+  "DisabledByDefault": false,
+  "Main": "com.hcchests.HC_ChestsPlugin"
+}
